@@ -1,6 +1,7 @@
 package com.vanillage.raytraceantixray;
 
 import java.io.File;
+import java.util.List;
 import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,10 +10,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,6 +47,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 public final class RayTraceAntiXray extends JavaPlugin {
     // private volatile Configuration configuration;
@@ -94,8 +100,22 @@ public final class RayTraceAntiXray extends JavaPlugin {
         pluginManager.registerEvents(new WorldListener(this), this);
         pluginManager.registerEvents(new PlayerListener(this), this);
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketListener(this));
-        // registerCommands();
-        getCommand("raytraceantixray").setExecutor(new RayTraceAntiXrayTabExecutor(this));
+        Command command =  new Command("raytraceantixray") {
+            final TabExecutor tabExecutor = new RayTraceAntiXrayTabExecutor(RayTraceAntiXray.this);
+            @Override
+            public boolean execute(@NotNull CommandSender commandSender, @NotNull String s, @NotNull String[] strings) {
+                return tabExecutor.onCommand(commandSender, this, s, strings);
+            }
+            @Override
+            public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
+                return tabExecutor.onTabComplete(sender, this, alias, args);
+            }
+        };
+        command.setPermission("raytraceantixray.command.raytraceantixray");
+        command.setUsage("§cUsage: /<command> timings (on|off)");
+        command.setDescription("All commands for RayTraceAntiXray.");
+        command.setPermissionMessage("§cYou don't have permissions.");
+        Bukkit.getCommandMap().register("raytraceantixray", command);
         getLogger().info(getPluginMeta().getDisplayName() + " enabled");
     }
 
